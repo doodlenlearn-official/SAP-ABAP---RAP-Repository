@@ -2,7 +2,7 @@
 @EndUserText.label: 'Projection view for booking entity'
 @Metadata.ignorePropagatedAnnotations: false
 @VDM.viewType: #CONSUMPTION
-define view entity ZAM_P_Booking_processor as projection on ZAM_C_BOOKING
+define view entity ZAM_P_Booking_processor as projection on ZAM_C_Booking
 {
     key TravelId,
     key BookingId,
@@ -17,7 +17,7 @@ define view entity ZAM_P_Booking_processor as projection on ZAM_C_BOOKING
     LastChangedAt,
     /* Associations */
     _BookingStatus,
-    _BOOKSUPPL : redirected to composition child zam_p_booksuppl_processor ,
+    _Booksuppl: redirected to composition child ZAM_P_BookSuppl_processor ,
     _Carrier,
     _Connection,
     _Customer,

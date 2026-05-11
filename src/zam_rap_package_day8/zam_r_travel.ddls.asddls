@@ -4,7 +4,7 @@
 @VDM.viewType: #COMPOSITE
 define root view entity ZAM_R_Travel
   as select from /dmo/travel_m
-  composition of many ZAM_C_BOOKING                  as _BOOKING
+  composition of many ZAM_C_Booking                  as _Booking
   association of one to one /DMO/I_Agency            as _Agency        on $projection.AgencyId = _Agency.AgencyID
   association of one to one /DMO/I_Customer          as _Customer      on $projection.CustomerId = _Customer.CustomerID
   association of one to one I_Currency               as _Currency      on $projection.CurrencyCode = _Currency.Currency
@@ -12,9 +12,21 @@ define root view entity ZAM_R_Travel
 {
       @ObjectModel.text.element: [ 'Description'  ]
   key /dmo/travel_m.travel_id                                           as TravelId,
+  @Consumption.valueHelpDefinition: [{
+                entity: {
+                        name: '/DMO/I_Agency',
+                        element: 'AgencyID'
+                }
+  }]   
       /dmo/travel_m.agency_id                                           as AgencyId,
       @ObjectModel.text.element: [ 'Agencyname']
       _Agency.Name                                                      as AgencyName,
+      @Consumption.valueHelpDefinition: [{ 
+                            entity:{
+                                name: '/DMO/I_Customer',
+                                element: 'CustomerID'
+                            }
+       }]
       /dmo/travel_m.customer_id                                         as CustomerId,
       @ObjectModel.text.element: [ 'Customername']
       concat( concat( _Customer.FirstName, ' ' ) , _Customer.LastName ) as CustomerName,
@@ -24,9 +36,22 @@ define root view entity ZAM_R_Travel
       /dmo/travel_m.booking_fee                                         as BookingFee,
       @Semantics.amount.currencyCode: 'CurrencyCode'
       /dmo/travel_m.total_price                                         as TotalPrice,
+            @Consumption.valueHelpDefinition: [{ 
+                            entity: {
+                            name: 'I_Currency',
+                            element: 'Currency'
+                            }
+       }]
       /dmo/travel_m.currency_code                                       as CurrencyCode,
       /dmo/travel_m.description                                         as Description,
+      @ObjectModel.text.element: [ 'StatusText' ]
       @EndUserText.label: 'Spiderman'
+      @Consumption.valueHelpDefinition: [{ 
+                            entity: {
+                            name: '/DMO/I_Overall_Status_VH',
+                            element: 'OverallStatus'
+                            }
+       }]
       /dmo/travel_m.overall_status                                      as OverallStatus,
       case /dmo/travel_m.overall_status
       when 'O' then 2
@@ -45,7 +70,7 @@ define root view entity ZAM_R_Travel
       /dmo/travel_m.last_changed_by                                     as LastChangedBy,
 
       //    _association_name // Make association public
-      _BOOKING,
+      _Booking,
       _Agency,
       _Customer,
       _Currency,

@@ -26,7 +26,7 @@ define root view entity ZAM_P_Travel_processor
       Minion,
       /* Associations */
       _Agency,
-      _BOOKING : redirected to composition child ZAM_P_Booking_processor,
+      _Booking : redirected to composition child ZAM_P_Booking_processor,
       _Currency,
       _Customer,
       _Overallstatus

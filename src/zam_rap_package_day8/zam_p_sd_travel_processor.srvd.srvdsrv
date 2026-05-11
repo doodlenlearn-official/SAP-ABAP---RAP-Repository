@@ -1,8 +1,8 @@
 @EndUserText.label: 'Service defn for travel processor'
 define service ZAM_P_SD_TRAVEL_PROCESSOR {
   expose ZAM_P_Travel_processor    as Travel;
-  expose ZAM_P_Booking_processor   as BOOKING;
-  expose ZAM_P_BookSuppl_processor as BOOKSUPPL;
+  expose ZAM_P_Booking_processor   as Booking;
+  expose ZAM_P_BookSuppl_processor as Booksuppl;
   expose /DMO/I_Agency             as Agency;
   expose /DMO/I_Customer           as Customer;
   expose I_Currency                as Currency;
