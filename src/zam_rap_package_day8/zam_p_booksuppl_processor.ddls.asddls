@@ -2,6 +2,7 @@
 @EndUserText.label: 'Projection view for booking supplement entity'
 @Metadata.ignorePropagatedAnnotations: false
 @VDM.viewType: #CONSUMPTION
+@Metadata.allowExtensions: true
 define view entity ZAM_P_BookSuppl_processor as projection on ZAM_C_Booksuppl
 {
     key TravelId,

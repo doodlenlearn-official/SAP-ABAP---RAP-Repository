@@ -6,54 +6,103 @@ title: { value: 'TravelId'  },
 description: { value: 'Description' }
 
 }
-annotate entity ZAM_P_Travel_processor
-    with 
+annotate entity ZAM_P_Travel_processor with
 {
-   @UI.facet: [
-            { 
-                purpose: #HEADER,
-                id: 'TravelHeaderPrice',
-                type: #DATAPOINT_REFERENCE,
-                position: 10,
-                targetQualifier: 'optimusprime'
-                
-            },
-    { 
-                purpose: #HEADER,
-                id: 'Overallstatus',
-                type:#DATAPOINT_REFERENCE,
-                position: 20,
-                targetQualifier: 'bumblebee'
-                
-     }
-     ]
-   @UI.selectionField: [{ position: 10 }] 
-   @UI.lineItem: [ {  position: 10 } ]
-   TravelId;
-   @UI.lineItem: [ { position: 20 } ]
-   @UI.selectionField: [ { position: 20 } ] 
-   AgencyId;
-   @UI.lineItem: [ { position: 30 } ]
-   @UI.selectionField: [ { position: 30 } ]
-   CustomerId;
-   @UI.lineItem: [ {  position: 40 } ]
-   BeginDate;
-//   EndDate;
-//   BookingFee;
-@UI.selectionField: [ { position: 40 } ]
-@UI.lineItem: [ { position: 50 } ]
-@UI.dataPoint: { qualifier: 'optimusprime' , title: 'Total Price' }
-   TotalPrice;
-//   CurrencyCode;
-//   Description;
-@UI.selectionField: [ { position: 50 } ]
-@UI.lineItem: [ { position: 60 , importance: #HIGH, criticality: 'Minion' } ]
-@UI.dataPoint: { qualifier: 'bumblebee' , title : 'Travel Status', criticality: 'Minion' }
-   OverallStatus;
-//   CreatedBy;
-//   CreatedAt;
-//   LastChangedBy;
-//   LastChangedAt;
+  @UI.facet: [
+           {
+               purpose: #HEADER,
+               id: 'TravelHeaderPrice',
+               type: #DATAPOINT_REFERENCE,
+               position: 10,
+               targetQualifier: 'optimusprime'
 
-    
+           },
+   {
+               purpose: #HEADER,
+               id: 'Overallstatus',
+               type:#DATAPOINT_REFERENCE,
+               position: 20,
+               targetQualifier: 'bumblebee'
+    },
+    {
+               purpose: #STANDARD,
+               type: #COLLECTION,
+               id: 'idGeneralInfo',
+               position: 10,
+               label: 'General Information'
+    },
+    {
+               purpose: #STANDARD,
+               type: #IDENTIFICATION_REFERENCE,
+               id: 'basic',
+               label: 'Basic Data',
+               position: 10,
+               parentId: 'idGeneralInfo'
+     },
+     {
+               purpose: #STANDARD,
+               type: #FIELDGROUP_REFERENCE,
+               id: 'dates',
+               label: 'Travel Dates',
+               position: 20,
+               parentId: 'idGeneralInfo',
+               targetQualifier: 'spiderman'
+     },
+     {
+               purpose: #STANDARD,
+               type: #FIELDGROUP_REFERENCE,
+               id: 'prices',
+               label: 'Costs',
+               position: 30,
+               parentId: 'idGeneralInfo',
+               targetQualifier: 'wonderwomen'
+     },
+     {
+                purpose: #STANDARD,
+                type: #LINEITEM_REFERENCE,
+                id: 'idItems',
+                label: 'Bookings',
+                position: 20,
+                targetElement: '_Booking'
+     }
+    ]
+  @UI.selectionField: [{ position: 10 }]
+  @UI.lineItem: [ {  position: 10 } ]
+  @UI.identification: [{ position: 10 }]
+  TravelId;
+  @UI.lineItem: [ { position: 20 } ]
+  @UI.selectionField: [ { position: 20 } ]
+  @UI.identification: [{ position: 30 }]
+  AgencyId;
+  @UI.lineItem: [ { position: 30 } ]
+  @UI.selectionField: [ { position: 30 } ]
+  @UI.identification: [{ position: 40 }]
+  CustomerId;
+  @UI.lineItem: [ {  position: 40 } ]
+  @UI.fieldGroup: [{ position: 10, qualifier: 'spiderman' }]
+  BeginDate;
+  @UI.fieldGroup: [{ position: 20, qualifier: 'spiderman' }]
+  EndDate;
+  @UI.fieldGroup:  [{ position: 20, qualifier: 'wonderwomen'  }]
+  BookingFee;
+  @UI.selectionField: [ { position: 40 } ]
+  @UI.lineItem: [ { position: 50 } ]
+  @UI.dataPoint: { qualifier: 'optimusprime' , title: 'Total Price' }
+  @UI.fieldGroup: [{ position: 10, qualifier: 'wonderwomen'  }]
+  TotalPrice;
+  @UI.fieldGroup: [{ position: 30, qualifier: 'wonderwomen' }]
+  CurrencyCode;
+  @UI.fieldGroup: [{ position: 20 }]
+  Description;
+  @UI.selectionField: [ { position: 50 } ]
+  @UI.lineItem: [ { position: 60 , importance: #HIGH, criticality: 'Minion' } ]
+  @UI.dataPoint: { qualifier: 'bumblebee' , title : 'Travel Status', criticality: 'Minion' }
+  @UI.fieldGroup: [{ position: 40, qualifier: 'spiderman' }]
+  OverallStatus;
+  //   CreatedBy;
+  //   CreatedAt;
+  //   LastChangedBy;
+  //   LastChangedAt;
+
+
 }

@@ -1,0 +1,29 @@
+projection;
+strict ( 2 );
+
+define behavior for ZAM_P_Travel_processor alias Travel
+{
+  use create;
+  use update;
+  use delete;
+
+  use association _Booking { create; }
+}
+
+define behavior for ZAM_P_Booking_processor alias Booking
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+  use association _Booksuppl { create; }
+}
+
+define behavior for ZAM_P_BookSuppl_processor alias BookSuppl
+{
+  use update;
+  use delete;
+
+  use association _Travel;
+  use association _Booking;
+}

@@ -1,0 +1,43 @@
+managed
+implementation in class zbp_am_r_travel unique;
+strict ( 2 );
+
+define behavior for ZAM_R_Travel alias Travel
+//persistent table <???>
+persistent table /dmo/travel_m
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  create ( authorization : global );
+  update;
+  delete;
+//  field ( readonly ) TravelId;
+  association _Booking { create; }
+}
+
+define behavior for ZAM_C_Booking alias Booking
+persistent table /dmo/booking_m
+lock dependent by _Travel
+authorization dependent by _Travel
+etag master LastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId;
+  association _Travel;
+  association _Booksuppl { create; }
+}
+
+define behavior for ZAM_C_Booksuppl alias BookSuppl
+persistent table /dmo/booksuppl_m
+lock dependent by _Travel
+authorization dependent by _Travel
+etag master LastChangedAt
+{
+  update;
+  delete;
+  field ( readonly ) TravelId, BookingId; //BookingSupplementId;
+  association _Travel;
+  association _Booking;
+}

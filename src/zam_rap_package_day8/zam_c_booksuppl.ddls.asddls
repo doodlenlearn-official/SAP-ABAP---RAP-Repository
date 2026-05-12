@@ -2,6 +2,7 @@
 @EndUserText.label: 'Child of Bookinf - Supplement'
 @Metadata.ignorePropagatedAnnotations: true
 @VDM.viewType: #COMPOSITE
+@Metadata.allowExtensions: true
 define view entity ZAM_C_Booksuppl as select from /dmo/booksuppl_m
     association to parent ZAM_C_Booking as _Booking on $projection.TravelId = _Booking.TravelId
                                                    and $projection.BookingId = _Booking.BookingId
