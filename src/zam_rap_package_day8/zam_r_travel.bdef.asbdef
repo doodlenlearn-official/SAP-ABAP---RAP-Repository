@@ -8,11 +8,12 @@ persistent table /dmo/travel_m
 lock master
 authorization master ( instance )
 etag master LastChangedAt
+early numbering
 {
   create ( authorization : global );
   update;
   delete;
-//  field ( readonly ) TravelId;
+  field ( readonly ) TravelId;
   association _Booking { create; }
 }
 

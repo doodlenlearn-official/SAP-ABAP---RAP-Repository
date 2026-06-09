@@ -1,32 +1,13 @@
-CLASS zcl_am_first_class DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_AM_FIRST_CLASS definition
+  public
+  create private .
 
-  PUBLIC SECTION.
-
-    INTERFACES if_oo_adt_classrun .
-  PROTECTED SECTION.
-  PRIVATE SECTION.
+public section.
+protected section.
+private section.
 ENDCLASS.
 
 
 
-CLASS zcl_am_first_class IMPLEMENTATION.
-
-
-  METHOD if_oo_adt_classrun~main.
-
-  SELECT * from i_country into table @data(lt_country).
-
-  out->write(
-    EXPORTING
-      data   = lt_country
-*      name   =
-*    RECEIVING
-*      output =
-  ).
-
-
-  ENDMETHOD.
+CLASS ZCL_AM_FIRST_CLASS IMPLEMENTATION.
 ENDCLASS.
