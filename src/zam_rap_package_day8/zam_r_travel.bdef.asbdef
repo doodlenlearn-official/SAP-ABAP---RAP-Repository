@@ -1,8 +1,9 @@
-managed
-implementation in class zbp_am_r_travel unique;
+managed;
+
 strict ( 2 );
 
 define behavior for ZAM_R_Travel alias Travel
+implementation in class zbp_am_r_travel unique
 //persistent table <???>
 persistent table /dmo/travel_m
 lock master
@@ -14,7 +15,11 @@ early numbering
   update;
   delete;
   field ( readonly ) TravelId;
-  association _Booking { create; }
+  field ( mandatory ) begindate, enddate, agencyid, customerid;
+
+  factory action copyTravel[1];
+
+  association _Booking { create ( features:instance ); }
 
   mapping for /dmo/travel_m{
   TravelId = travel_id;
@@ -35,6 +40,7 @@ early numbering
 }
 
 define behavior for ZAM_C_Booking alias Booking
+implementation in class zbp_am_r_booking unique
 persistent table /dmo/booking_m
 lock dependent by _Travel
 authorization dependent by _Travel
@@ -44,6 +50,7 @@ early numbering
   update;
   delete;
   field ( readonly ) TravelId, BookingId;
+  field ( mandatory ) CarrierId, ConnectionId, BookingDate, customerid;
   association _Travel;
   association _Booksuppl { create; }
 
@@ -68,10 +75,12 @@ persistent table /dmo/booksuppl_m
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
+early numbering
 {
   update;
   delete;
-  field ( readonly ) TravelId, BookingId; //BookingSupplementId;
+  field ( readonly ) TravelId, BookingId,BookingSupplementId;
+  field ( mandatory ) SupplementId, CurrencyCode, price;
   association _Travel;
   association _Booking;
 
