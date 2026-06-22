@@ -1,6 +1,7 @@
 projection;
 strict ( 2 );
 use side effects;
+use draft;
 
 define behavior for ZAM_P_Travel_processor alias Travel
 {
@@ -8,9 +9,15 @@ define behavior for ZAM_P_Travel_processor alias Travel
   use update;
   use delete;
 
+  use action Activate;
+  use action Edit;
+  use action Resume;
+  use action Prepare;
+  use action Discard;
+
 use action copyTravel;
 
-  use association _Booking { create; }
+  use association _Booking { create; with draft; }
 }
 
 define behavior for ZAM_P_Booking_processor alias Booking
@@ -18,8 +25,8 @@ define behavior for ZAM_P_Booking_processor alias Booking
   use update;
   use delete;
 
-  use association _Travel;
-  use association _Booksuppl { create; }
+  use association _Travel { with draft ; }
+  use association _Booksuppl { create; with draft; }
 }
 
 define behavior for ZAM_P_BookSuppl_processor alias BookSuppl
@@ -27,6 +34,6 @@ define behavior for ZAM_P_BookSuppl_processor alias BookSuppl
   use update;
   use delete;
 
-  use association _Travel;
-  use association _Booking;
+  use association _Travel{ with draft ; }
+  use association _Booking{ with draft ; }
 }

@@ -14,6 +14,8 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR ACTION travel~recalctotalprice.
     METHODS calctotalprice FOR DETERMINE ON MODIFY
       IMPORTING keys FOR travel~calctotalprice.
+    METHODS validateheaderdata FOR VALIDATE ON SAVE
+      IMPORTING keys FOR travel~validateheaderdata.
     METHODS earlynumbering_cba_Booking FOR NUMBERING
       IMPORTING entities FOR CREATE Travel\_Booking.
     METHODS earlynumbering_create FOR NUMBERING
@@ -85,7 +87,8 @@ METHOD earlynumbering_create.
   LOOP AT entities_wo_travelid INTO entity.
     travel_id_max += 1.
     entity-TravelId = travel_id_max.
-    APPEND VALUE #( %cid = entity-%cid %key = entity-%key ) TO mapped-travel.
+    APPEND VALUE #( %cid = entity-%cid %key = entity-%key
+                    %is_draft = entity-%is_draft ) TO mapped-travel.
   ENDLOOP.
 
 ENDMETHOD.
@@ -307,9 +310,10 @@ ENDLOOP.
 
             endloop.
             endloop.
+            clear <fs_travel>-totalprice.
             endloop.
 
-            clear <fs_travel>-totalprice.
+
 
             LOOP at amounts_per_currencycode into data(ls_amount_per_currency).
 
@@ -351,6 +355,86 @@ ENDLOOP.
   ENTITY Travel
   EXECUTE reCalcTotalPrice
   FROM CORRESPONDING #( keys ).
+
+  ENDMETHOD.
+
+  METHOD validateHeaderData.
+
+  data: lt_customers TYPE SORTED TABLE of /dmo/customer with unique key customer_id,
+        lt_agency TYPE SORTED TABLE OF /dmo/agency WITH UNIQUE KEY agency_id.
+
+   READ ENTITIES OF ZAM_R_Travel
+   ENTITY travel
+   FIELDS ( agencyid customerid begindate enddate )
+            WITH CORRESPONDING #( keys )
+            RESULT data(lt_travel).
+
+
+   lt_customers = CORRESPONDING #( lt_travel Discarding duplicates mapping customer_id = customerid except * ).
+   lt_agency = CORRESPONDING #( lt_travel Discarding duplicates mapping agency_id = agencyid except * ).
+
+   delete lt_customers where customer_id is initial.
+   delete lt_agency where agency_id is initial.
+
+   if lt_customers is NOT INITIAL.
+
+   SELECT FROM /dmo/customer fields customer_id
+   FOR ALL entries in @lt_customers
+   where customer_id = @lt_customers-customer_id
+   into TABLE @DATA(LT_CUST_DB).
+
+   endif.
+
+
+   IF lt_AGENCY is NOT INITIAL.
+
+   SELECT FROM /dmo/AGENCY fields AGENCY_id
+   FOR ALL entries in @lt_AGENCY
+   where AGENCY_id = @lt_AGENCY-AGENCY_id
+   into TABLE @DATA(LT_AGENCY_DB).
+
+   ENDIF.
+
+
+LOOP AT lt_travel into data(ls_travel).
+
+
+if ( ls_travel-customerid is initial OR NOT line_exists( lt_cust_db[ customer_id = ls_travel-customerid ] ) ).
+
+APPEND VALUE #( %tky = ls_travel-%tky ) to failed-travel.
+APPEND VALUE #( %tky = ls_travel-%tky
+                %element-customerid = if_abap_behv=>mk-on
+                %msg = new /dmo/cm_flight_messages(
+                                                    textid = /dmo/cm_flight_messages=>customer_unkown
+                                                    customer_id = ls_travel-CustomerId
+                                                    severity = if_abap_behv_message=>severity-error
+                 )
+) to reported-travel.
+
+
+endif.
+
+
+if ( ls_travel-agencyid is initial OR NOT line_exists( lt_agency_db[ agency_id = ls_travel-agencyid ] ) ).
+
+APPEND VALUE #( %tky = ls_travel-%tky ) to failed-travel.
+APPEND VALUE #( %tky = ls_travel-%tky
+                %element-agencyid = if_abap_behv=>mk-on
+                %msg = new /dmo/cm_flight_messages(
+                                                    textid = /dmo/cm_flight_messages=>agency_unkown
+                                                    agency_id = ls_travel-agencyId
+                                                    severity = if_abap_behv_message=>severity-error
+                 )
+) to reported-travel.
+
+
+endif.
+
+
+ENDLOOP.
+
+
+
 
   ENDMETHOD.
 

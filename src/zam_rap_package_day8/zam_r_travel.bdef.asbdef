@@ -2,11 +2,15 @@ managed;
 
 strict ( 2 );
 
+with draft;
+
 define behavior for ZAM_R_Travel alias Travel
 implementation in class zbp_am_r_travel unique
 //persistent table <???>
 persistent table /dmo/travel_m
 lock master
+total etag LastChangedAt
+draft table zam_rap_dtrav
 authorization master ( instance )
 etag master LastChangedAt
 early numbering
@@ -21,6 +25,16 @@ early numbering
 
   internal action reCalcTotalPrice;
 
+  validation validateHeaderData on save { create; field CustomerId, BeginDate, EndDate, AgencyId ; }
+
+  determine action validateCustomer { validation validateHeaderData; }
+
+  draft determine action Prepare;
+  draft action Edit;
+  draft action Resume;
+  draft action Activate;
+  draft action Discard;
+
   determination calcTotalPrice on modify { field BookingFee, CurrencyCode; create;  }
 
   side effects {
@@ -28,7 +42,8 @@ early numbering
                 entity _Booking affects field TotalPrice;
   }
 
-  association _Booking { create ( features:instance ); }
+
+  association _Booking { create ( features:instance ); with draft; }
 
   mapping for /dmo/travel_m{
   TravelId = travel_id;
@@ -51,6 +66,7 @@ early numbering
 define behavior for ZAM_C_Booking alias Booking
 implementation in class zbp_am_r_booking unique
 persistent table /dmo/booking_m
+draft table zam_rap_dbook
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
@@ -60,8 +76,8 @@ early numbering
   delete;
   field ( readonly ) TravelId, BookingId;
   field ( mandatory ) CarrierId, ConnectionId, BookingDate, customerid;
-  association _Travel;
-  association _Booksuppl { create; }
+  association _Travel { with draft; }
+  association _Booksuppl { create; with draft; }
 
     determination calcTotalPriceBook on modify { field FlightPrice, CurrencyCode; create;  }
 
@@ -89,6 +105,7 @@ early numbering
 define behavior for ZAM_C_Booksuppl alias BookSuppl
 implementation in class zbp_am_r_booksuppl unique
 persistent table /dmo/booksuppl_m
+draft table zam_rap_dbooks
 lock dependent by _Travel
 authorization dependent by _Travel
 etag master LastChangedAt
@@ -98,8 +115,8 @@ early numbering
   delete;
   field ( readonly ) TravelId, BookingId,BookingSupplementId;
   field ( mandatory ) SupplementId, CurrencyCode, price;
-  association _Travel;
-  association _Booking;
+  association _Travel { with draft; }
+  association _Booking { with draft; }
 
    determination calcTotalPriceBook on modify { field Price, CurrencyCode; create;  }
 
