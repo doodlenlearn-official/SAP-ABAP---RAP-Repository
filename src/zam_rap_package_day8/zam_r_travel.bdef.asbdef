@@ -19,6 +19,15 @@ early numbering
 
   factory action copyTravel[1];
 
+  internal action reCalcTotalPrice;
+
+  determination calcTotalPrice on modify { field BookingFee, CurrencyCode; create;  }
+
+  side effects {
+                field BookingFee affects field TotalPrice;
+                entity _Booking affects field TotalPrice;
+  }
+
   association _Booking { create ( features:instance ); }
 
   mapping for /dmo/travel_m{
@@ -54,6 +63,13 @@ early numbering
   association _Travel;
   association _Booksuppl { create; }
 
+    determination calcTotalPriceBook on modify { field FlightPrice, CurrencyCode; create;  }
+
+     side effects {
+                field FlightPrice affects field _Travel.TotalPrice;
+                entity _Booksuppl affects field _Travel.TotalPrice;
+  }
+
   mapping for /dmo/booking_m
     {
       travelid      = travel_id;
@@ -71,6 +87,7 @@ early numbering
 }
 
 define behavior for ZAM_C_Booksuppl alias BookSuppl
+implementation in class zbp_am_r_booksuppl unique
 persistent table /dmo/booksuppl_m
 lock dependent by _Travel
 authorization dependent by _Travel
@@ -83,6 +100,12 @@ early numbering
   field ( mandatory ) SupplementId, CurrencyCode, price;
   association _Travel;
   association _Booking;
+
+   determination calcTotalPriceBook on modify { field Price, CurrencyCode; create;  }
+
+     side effects {
+                field Price affects field _Travel.TotalPrice;
+  }
 
     mapping for /dmo/booksuppl_m
     {

@@ -10,6 +10,10 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys REQUEST requested_features FOR Travel RESULT result.
     METHODS copytravel FOR MODIFY
       IMPORTING keys FOR ACTION travel~copytravel.
+    METHODS recalctotalprice FOR MODIFY
+      IMPORTING keys FOR ACTION travel~recalctotalprice.
+    METHODS calctotalprice FOR DETERMINE ON MODIFY
+      IMPORTING keys FOR travel~calctotalprice.
     METHODS earlynumbering_cba_Booking FOR NUMBERING
       IMPORTING entities FOR CREATE Travel\_Booking.
     METHODS earlynumbering_create FOR NUMBERING
@@ -158,7 +162,7 @@ ENDLOOP.
 
 
   data: travels TYPE TABLE for CREATE zam_r_travel\\Travel,
-  booking_cba TYPE TABLE for CREATE zam_r_travel\\Travel\_Booking,
+  bookings_cba TYPE TABLE for CREATE zam_r_travel\\Travel\_Booking,
    booksuppl_cba TYPE TABLE for CREATE zam_r_travel\\Booking\_Booksuppl.
 
    read table keys with key %cid = '' into data(key_with_initial_cid).
@@ -186,20 +190,167 @@ ENDLOOP.
    failed failed.
 
 
-LOOP AT travel_read_result ASSIGNING FIELD-SYMBOL(<travel>).
+        LOOP AT travel_read_result ASSIGNING FIELD-SYMBOL(<travel>).
 
 
-APPEND value #( %cid = keys[ %tky = <travel>-%tky ]-%cid
-                %data = corresponding #( <travel> except travelid )
-                ) to travels ASSIGNING FIELD-SYMBOL(<new_travel>).
+        APPEND value #( %cid = keys[ %tky = <travel>-%tky ]-%cid
+                        %data = corresponding #( <travel> except travelid )
+                        ) to travels ASSIGNING FIELD-SYMBOL(<new_travel>).
 
 
-<new_travel>-BeginDate = cl_abap_context_info=>get_system_date( ).
-<new_travel>-EndDate = cl_abap_context_info=>get_system_date( ) + 30.
-<new_travel>-OverallStatus = 'N'.
+        <new_travel>-BeginDate = cl_abap_context_info=>get_system_date( ).
+        <new_travel>-EndDate = cl_abap_context_info=>get_system_date( ) + 30.
+        <new_travel>-OverallStatus = 'N'.
 
-Endloop.
+        APPEND value #(  %cid_ref = keys[ key entity %tky = <travel>-%tky ]-%cid
+                        ) to bookings_cba assigning field-symbol(<booking_cba>).
 
+        LOOP at book_read_result assigning FIELD-SYMBOL(<booking>) where travelid = <travel>-TravelId.
+
+        APPEND value #( %cid = keys[ key entity %tky = <travel>-%tky ]-%cid && <booking>-BookingId
+                        %data = CORRESPONDING #( book_read_result[  key entity %tky = <booking>-%tky  ] except travelid ) )
+                        to <booking_cba>-%target ASSIGNING FIELD-SYMBOL(<new_booking>).
+
+                        <new_booking>-BookingStatus = 'N'.
+
+
+                APPEND value #(  %cid_ref = keys[ key entity %tky = <travel>-%tky ]-%cid && <booking>-BookingId
+                        ) to booksuppl_cba assigning field-symbol(<booksuppl_cba>).
+
+                LOOP at booksuppl_read_result assigning FIELD-SYMBOL(<book_suppl>) where travelid = <travel>-TravelId
+                                                                                     and bookingid = <booking>-bookingid.
+
+                APPEND value #( %cid = keys[ key entity %tky = <travel>-%tky ]-%cid && <booking>-BookingId && <book_suppl>-BookingSupplementId
+                        %data = CORRESPONDING #( booksuppl_read_result[  key entity %tky = <book_suppl>-%tky  ] except travelid BookingId ) )
+                        to <booksuppl_cba>-%target .
+
+                Endloop.
+
+        Endloop.
+
+
+        Endloop.
+
+        modify ENTITIES OF ZAM_R_Travel IN LOCAL MODE
+        ENTITY Travel
+        CREATE FIELDS ( agencyid customerid begindate enddate bookingfee totalprice currencycode OverallStatus )
+        WITH travels
+        CREATE BY \_Booking FIELDS ( BookingId BookingDate CustomerId CarrierId ConnectionId FlightDate FlightPrice )
+        with bookings_cba
+        ENTITY booking
+        CREATE BY \_Booksuppl FIELDS ( BookingSupplementId SupplementId Price CurrencyCode )
+        with booksuppl_cba
+        mapped data(mapped_data).
+
+*        mapped-travel = mapped_data.
+        mapped = mapped_data.
+
+  ENDMETHOD.
+
+  METHOD reCalcTotalPrice.
+
+
+  TYPES: BEGIN OF ty_total_cost,
+        amount type /dmo/total_price,
+        currency type /dmo/currency_code,
+        end of ty_total_cost.
+
+        data amounts_per_currencycode type  STANDARD TABLE OF ty_total_cost.
+        data ls_header_curr type /dmo/currency_code.
+
+           READ ENTITIES OF zam_r_travel in LOCAL MODE
+           ENTITY travel
+           FIELDS ( BookingFee CurrencyCode )
+           WITH CORRESPONDING #( keys )
+           result data(travel)
+           failed failed.
+
+
+           READ ENTITIES OF zam_r_travel in LOCAL MODE
+           ENTITY travel by \_Booking
+           FIELDS ( FlightPrice CurrencyCode )
+           WITH CORRESPONDING #( travel )
+           result data(booking)
+           failed failed.
+
+
+           READ ENTITIES OF zam_r_travel in LOCAL MODE
+           ENTITY Booking by \_Booksuppl
+           FIELDS ( Price CurrencyCode )
+           WITH CORRESPONDING #( booking )
+           result data(booksuppl)
+           failed failed.
+
+
+           delete travel where currencycode is initial.
+           delete booking where currencycode is initial.
+           delete booksuppl where currencycode is initial.
+
+            LOOP AT travel ASSIGNING FIELD-SYMBOL(<fs_travel>).
+
+            amounts_per_currencycode = value #( ( amount = <fs_travel>-BookingFee
+                                                  currency = <fs_travel>-CurrencyCode ) ).
+           ls_header_curr = <fs_travel>-CurrencyCode.
+            LOOP AT booking into data(wa_booking).
+
+            collect value ty_total_cost( amount = wa_booking-FlightPrice
+                             currency = wa_booking-CurrencyCode )
+                             into amounts_per_currencycode.
+
+            LOOP AT booksuppl into data(wa_booksuppl).
+
+            collect value ty_total_cost( amount = wa_booksuppl-price
+                             currency = wa_booksuppl-CurrencyCode )
+                             into amounts_per_currencycode.
+
+
+
+            endloop.
+            endloop.
+            endloop.
+
+            clear <fs_travel>-totalprice.
+
+            LOOP at amounts_per_currencycode into data(ls_amount_per_currency).
+
+            if ls_amount_per_currency-currency = ls_header_curr.
+
+            <fs_travel>-TotalPrice += ls_amount_per_currency-amount.
+
+            else.
+
+            /dmo/cl_flight_amdp=>convert_currency(
+              EXPORTING
+                iv_amount               = ls_amount_per_currency-amount
+                iv_currency_code_source = ls_amount_per_currency-currency
+                iv_currency_code_target = ls_header_curr
+                iv_exchange_rate_date   = cl_abap_context_info=>get_system_date( )
+              IMPORTING
+                ev_amount               = data(total_amt)
+            ).
+
+            <fs_travel>-TotalPrice += total_amt.
+
+            endif.
+
+
+            endloop.
+
+            modify ENTITIES OF zam_r_travel IN LOCAL MODE
+            entity travel
+            update fields (  totalprice )
+            WITH CORRESPONDING #(  travel ).
+
+
+  ENDMETHOD.
+
+  METHOD calcTotalPrice.
+
+
+  MODIFY ENTITIES OF ZAM_R_Travel IN LOCAL MODE
+  ENTITY Travel
+  EXECUTE reCalcTotalPrice
+  FROM CORRESPONDING #( keys ).
 
   ENDMETHOD.
 
