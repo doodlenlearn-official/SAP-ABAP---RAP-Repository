@@ -1,4 +1,4 @@
-managed;
+managed implementation in class zbp_am_r_travel unique;
 
 strict ( 2 );
 
@@ -14,6 +14,7 @@ draft table zam_rap_dtrav query zam_rap_travq
 authorization master ( instance )
 etag master LastChangedAt
 early numbering
+with additional save
 {
   create ( authorization : global );
   update;

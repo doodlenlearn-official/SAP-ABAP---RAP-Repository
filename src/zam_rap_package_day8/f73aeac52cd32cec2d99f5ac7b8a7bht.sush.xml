@@ -16,7 +16,22 @@
      <OBJECT>S_START</OBJECT>
      <OKFLAG>X</OKFLAG>
     </USOBX>
+    <USOBX>
+     <NAME>F73AEAC52CD32CEC2D99F5AC7B8A7B</NAME>
+     <TYPE>HT</TYPE>
+     <OBJECT>ZAM_AUTH</OBJECT>
+     <OKFLAG>Y</OKFLAG>
+    </USOBX>
    </USOBX>
+   <USOBT>
+    <USOBT>
+     <NAME>F73AEAC52CD32CEC2D99F5AC7B8A7B</NAME>
+     <TYPE>HT</TYPE>
+     <OBJECT>ZAM_AUTH</OBJECT>
+     <FIELD>ACTVT</FIELD>
+     <LOW>02</LOW>
+    </USOBT>
+   </USOBT>
    <USOBX_EXT>
     <item>
      <OBJECT>S_START</OBJECT>
@@ -32,7 +47,28 @@
      <EXCEP_TX>Okay</EXCEP_TX>
      <EXCEP_ICON>@08@</EXCEP_ICON>
     </item>
+    <item>
+     <OBJECT>ZAM_AUTH</OBJECT>
+     <TTEXT>ZAM_AUTH</TTEXT>
+     <OCLSS>CPAE</OCLSS>
+     <OKFLAG>Y</OKFLAG>
+     <DEVCLASS>ZAM_RAP_PACKAGE_DAY8</DEVCLASS>
+     <CI_TEXT>Check/Maintain</CI_TEXT>
+     <CH_TEXT>Check</CH_TEXT>
+     <PR_TEXT>Yes</PR_TEXT>
+     <EXCEP>3</EXCEP>
+     <EXCEP_TX>Okay</EXCEP_TX>
+     <EXCEP_ICON>@08@</EXCEP_ICON>
+    </item>
    </USOBX_EXT>
+   <USOBT_EXT>
+    <item>
+     <OBJECT>ZAM_AUTH</OBJECT>
+     <TTEXT>ZAM_AUTH</TTEXT>
+     <FIELD>ACTVT</FIELD>
+     <LOW>02</LOW>
+    </item>
+   </USOBT_EXT>
   </asx:values>
  </asx:abap>
 </abapGit>
