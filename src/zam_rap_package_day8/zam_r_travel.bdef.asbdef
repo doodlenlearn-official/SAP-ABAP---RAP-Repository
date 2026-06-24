@@ -2,7 +2,7 @@ managed;
 
 strict ( 2 );
 
-with draft;
+with collaborative draft;
 
 define behavior for ZAM_R_Travel alias Travel
 implementation in class zbp_am_r_travel unique
@@ -10,7 +10,7 @@ implementation in class zbp_am_r_travel unique
 persistent table /dmo/travel_m
 lock master
 total etag LastChangedAt
-draft table zam_rap_dtrav
+draft table zam_rap_dtrav query zam_rap_travq
 authorization master ( instance )
 etag master LastChangedAt
 early numbering
@@ -27,19 +27,24 @@ early numbering
 
   validation validateHeaderData on save { create; field CustomerId, BeginDate, EndDate, AgencyId ; }
 
-  determine action validateCustomer { validation validateHeaderData; }
+  determine action validateCustomer {
+                                        validation validateHeaderData;
+                                     }
 
   draft determine action Prepare;
   draft action Edit;
   draft action Resume;
   draft action Activate;
   draft action Discard;
+  draft action Share;
 
   determination calcTotalPrice on modify { field BookingFee, CurrencyCode; create;  }
 
   side effects {
                 field BookingFee affects field TotalPrice;
                 entity _Booking affects field TotalPrice;
+                determine action validateCustomer executed on field CustomerId
+                                                    affects messages;
   }
 
 

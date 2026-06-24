@@ -25,10 +25,14 @@ ENDCLASS.
 
 CLASS lhc_Travel IMPLEMENTATION.
 
-  METHOD get_instance_authorizations.
+  METHOD get_global_authorizations.
   ENDMETHOD.
 
-  METHOD get_global_authorizations.
+  METHOD get_instance_authorizations.
+
+
+
+
   ENDMETHOD.
 
 METHOD earlynumbering_create.
