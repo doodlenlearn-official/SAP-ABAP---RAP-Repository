@@ -3,7 +3,7 @@
 @Metadata.ignorePropagatedAnnotations: false
 @Metadata.allowExtensions: true
 @VDM.viewType: #CONSUMPTION
-define root view entity ZAM_P_Travel_processor
+define root view entity ZAM_P_TRAVEL_APPROVER
   as projection on ZAM_R_Travel
 {
   key TravelId,
@@ -24,15 +24,10 @@ define root view entity ZAM_P_Travel_processor
       CustomerName,
       StatusText,
       Minion,
-      @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZCL_AM_VE'
-      @EndUserText.label:  'CO2 Tax'
-      virtual CO2Tax: abap.int4,
-      @ObjectModel.virtualElementCalculatedBy: 'ABAP:ZCL_AM_VE'
-      @EndUserText.label:  'Day Of Travel'
-      virtual dayOfFlight: abap.char(10),
+
       /* Associations */
       _Agency,
-      _Booking : redirected to composition child ZAM_P_Booking_processor,
+      _Booking : redirected to composition child ZAM_P_Booking_approver,
       _Currency,
       _Customer,
       _Overallstatus

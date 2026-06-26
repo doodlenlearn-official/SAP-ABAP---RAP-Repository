@@ -1,0 +1,9 @@
+@EndUserText.label: 'Service defn for travel processor'
+define service ZAM_P_SD_TRAVEL_APPROVER {
+  expose ZAM_P_TRAVEL_APPROVER   as Travel;
+  expose ZAM_P_BOOKING_APPROVER  as Booking;
+  expose /DMO/I_Agency           as Agency;
+  expose /DMO/I_Customer         as Customer;
+  expose I_Currency              as Currency;
+  expose /DMO/I_Travel_Status_VH as TravelStatus;
+}

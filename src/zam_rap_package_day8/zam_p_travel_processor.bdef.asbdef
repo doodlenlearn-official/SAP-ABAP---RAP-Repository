@@ -4,8 +4,9 @@ use side effects;
 use collaborative draft;
 
 define behavior for ZAM_P_Travel_processor alias Travel
+implementation in class zcl_am_trav_proc unique
 {
-  use create;
+  use create ( augment );
   use update;
   use delete;
 

@@ -1,0 +1,5 @@
+CLASS zcl_am_trav_proc DEFINITION PUBLIC ABSTRACT FINAL FOR BEHAVIOR OF zam_p_travel_processor.
+ENDCLASS.
+
+CLASS zcl_am_trav_proc IMPLEMENTATION.
+ENDCLASS.

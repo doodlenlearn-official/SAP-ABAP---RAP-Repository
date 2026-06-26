@@ -16,13 +16,16 @@ etag master LastChangedAt
 early numbering
 with additional save
 {
-  create ( authorization : global );
-  update;
+  create ( authorization : global, precheck );
+  update ( precheck );
   delete;
   field ( readonly ) TravelId;
   field ( mandatory ) begindate, enddate, agencyid, customerid;
 
   factory action copyTravel[1];
+
+  action ( features: instance ) acceptTravel result[1] $self;
+  action ( features: instance ) rejectTravel result[1] $self;
 
   internal action reCalcTotalPrice;
 

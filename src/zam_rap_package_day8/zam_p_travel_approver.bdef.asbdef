@@ -1,0 +1,28 @@
+projection;
+strict ( 2 );
+use collaborative draft;
+
+define behavior for ZAM_P_TRAVEL_APPROVER alias Travel
+{
+  use update;
+
+
+  field (readonly) AgencyId, CustomerId, BeginDate, EndDate, TotalPrice,Description;
+  use action acceptTravel;
+  use action rejectTravel;
+
+  use action Prepare;
+  use action Edit;
+  use action Resume;
+  use action Activate;
+  use action Discard;
+  use action Share;
+
+  use association _Booking ;
+}
+
+define behavior for ZAM_P_BOOKING_APPROVER alias Booking
+{
+
+  use association _Travel { with draft; }
+}

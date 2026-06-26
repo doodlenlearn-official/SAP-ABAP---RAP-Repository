@@ -6,7 +6,7 @@ title: { value: 'TravelId'  },
 description: { value: 'Description' }
 
 }
-annotate entity ZAM_P_Travel_processor with
+annotate entity ZAM_P_TRAVEL_APPROVER with
 {
   @UI.facet: [
            {
@@ -68,9 +68,11 @@ annotate entity ZAM_P_Travel_processor with
     ]
   @UI.selectionField: [{ position: 10 }]
   @UI.lineItem: [ {  position: 10 },
-                  { type: #FOR_ACTION, dataAction: 'copyTravel', label: 'Copy Request' } ]
-  @UI.identification: [ {  position: 10 },
-                  { type: #FOR_ACTION, dataAction: 'copyTravel', label: 'Copy Chaste' } ]
+                  { type: #FOR_ACTION, dataAction: 'acceptTravel', label: 'Approve' } ,
+                  { type: #FOR_ACTION, dataAction: 'rejectTravel', label: 'Reject' } ]
+    @UI.identification: [ {  position: 10 },
+                  { type: #FOR_ACTION, dataAction: 'acceptTravel', label: 'Approve' } ,
+                  { type: #FOR_ACTION, dataAction: 'rejectTravel', label: 'Reject' } ]
   TravelId;
   @UI.lineItem: [ { position: 20 } ]
   @UI.selectionField: [ { position: 20 } ]
@@ -101,12 +103,6 @@ annotate entity ZAM_P_Travel_processor with
   @UI.dataPoint: { qualifier: 'bumblebee' , title : 'Travel Status', criticality: 'Minion' }
   @UI.fieldGroup: [{ position: 40, qualifier: 'spiderman' }]
   OverallStatus;
-  @UI.lineItem: [ { position: 70 , importance: #HIGH } ]
-  @UI.fieldGroup: [{ position: 60, qualifier: 'spiderman' }]
-  dayOfFlight;
-  @UI.lineItem: [ { position: 80 , importance: #HIGH } ]
-  @UI.fieldGroup: [{ position: 70, qualifier: 'spiderman' }]
-  CO2Tax;
   //   CreatedBy;
   //   CreatedAt;
   //   LastChangedBy;

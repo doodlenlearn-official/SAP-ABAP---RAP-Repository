@@ -82,10 +82,35 @@ CLASS lhc_Travel DEFINITION INHERITING FROM cl_abap_behavior_handler.
       IMPORTING keys FOR travel~calctotalprice.
     METHODS validateheaderdata FOR VALIDATE ON SAVE
       IMPORTING keys FOR travel~validateheaderdata.
+    METHODS precheck_create FOR PRECHECK
+      IMPORTING entities FOR CREATE travel.
+
+    METHODS precheck_update FOR PRECHECK
+      IMPORTING entities FOR UPDATE travel.
+    METHODS accepttravel FOR MODIFY
+      IMPORTING keys FOR ACTION travel~accepttravel RESULT result.
+
+    METHODS rejecttravel FOR MODIFY
+      IMPORTING keys FOR ACTION travel~rejecttravel RESULT result.
     METHODS earlynumbering_cba_Booking FOR NUMBERING
       IMPORTING entities FOR CREATE Travel\_Booking.
     METHODS earlynumbering_create FOR NUMBERING
       IMPORTING entities FOR CREATE Travel.
+
+    types: t_entity_create type TABLE FOR create zam_r_travel,
+           t_entity_update type TABLE FOR update zam_r_travel,
+           t_entity_reported type TABLE for reported zam_r_travel,
+           t_entity_failed TYPE TABLE FOR failed zam_r_travel.
+
+    Methods precheck_reuse
+      IMPORTING
+      entity_u TYPE t_entity_update optional
+      entity_c TYPE t_entity_create optional
+      EXPORTING
+      reported type t_entity_reported
+      failed TYPE t_entity_failed.
+
+
 
 ENDCLASS.
 
@@ -274,7 +299,20 @@ ENDLOOP.
 
 
         result = value #( for ls_travel1 in lt_travel ( %tky = ls_travel1-%tky
-                                                        %assoc-_Booking = lv_allow )  ).
+                                                        %assoc-_Booking = lv_allow
+                                                        %features-%action-acceptTravel =
+                                                                                        cond #(
+                                                                                        when ls_travel1-overallstatus = 'A'
+                                                                                        then if_abap_behv=>fc-o-disabled
+                                                                                        else if_abap_behv=>fc-o-enabled
+                                                                                        )
+                                                        %features-%action-rejectTravel =
+                                                                                        cond #(
+                                                                                        when ls_travel1-overallstatus = 'X'
+                                                                                        then if_abap_behv=>fc-o-disabled
+                                                                                        else if_abap_behv=>fc-o-enabled
+                                                                                        )
+                                                         )  ).
 
   ENDMETHOD.
 
@@ -553,6 +591,170 @@ ENDLOOP.
 
 
 
+
+  ENDMETHOD.
+
+  METHOD precheck_reuse.
+
+
+data: entities type t_entity_update,
+      operation type if_abap_behv=>t_char01,
+      agencies type SORTED TABLE OF /dmo/agency with unique key agency_id,
+      customers type SORTED TABLE OF /dmo/customer with unique key customer_id.
+
+      assert not ( entity_c is initial equiv entity_u is initial ).
+
+      if entity_c is not initial.
+
+        entities = CORRESPONDING #( entity_c ).
+        operation = if_abap_behv=>op-m-create.
+
+      else.
+
+        entities = CORRESPONDING #( entity_u ).
+        operation = if_abap_behv=>op-m-update.
+
+      ENDIF.
+
+           delete entities where
+                %control-AgencyId = if_abap_behv=>mk-off
+                and %control-CustomerId = if_abap_behv=>mk-off.
+
+          agencies = CORRESPONDING #( entities discarding duplicates mapping agency_id = agencyid except * ).
+          customers = CORRESPONDING #( entities discarding duplicates mapping customer_id = customerid except * ).
+
+          select from /dmo/agency fields agency_id, country_code
+          FOR ALL ENTRIES IN @agencies where agency_id = @agencies-agency_id
+          into TABLE @DATA(lt_agency_country).
+
+          select from /dmo/customer fields customer_id, country_code
+          FOR ALL ENTRIES IN @customers where customer_id = @customers-customer_id
+          into TABLE @DATA(lt_customer_country).
+
+
+          LOOP at entities into data(entity).
+
+
+          read table lt_agency_country with key agency_id = entity-AgencyId into data(ls_agency_val).
+          check sy-subrc = 0.
+          read table lt_customer_country with key customer_id = entity-customerId into data(ls_customer_val).
+          check sy-subrc = 0.
+
+
+          if ls_agency_val-country_code <> ls_customer_val-country_code.
+
+          append value #(
+                            %cid = cond #(
+                                            when operation = if_abap_behv=>op-m-create
+                                            then entity-%cid_ref
+                             )
+                            %is_draft = entity-%is_draft
+                            %fail-cause = if_abap_behv=>cause-conflict
+
+           ) to failed.
+
+
+          append value #(
+                            %cid = cond #(
+                                            when operation = if_abap_behv=>op-m-create
+                                            then entity-%cid_ref
+                             )
+                            %is_draft = entity-%is_draft
+                            %msg = new /dmo/cm_flight_messages(
+                                                                textid = value #(  msgid = 'SY' msgno = 499
+                                                                                   attr1 = 'The country code for'
+                                                                                   attr2 = | { entity-AgencyId  } and |
+                                                                                   attr3 = entity-customerId
+                                                                                   attr4 = 'doesnt match'
+                                                                                     )
+                                                                agency_id = entity-AgencyId
+                                                                customer_id = entity-customerId
+                                                                severity = if_abap_behv_message=>severity-error
+                                 )
+                            %element-agencyid = if_abap_behv=>mk-on
+
+
+           ) to reported.
+
+          endif.
+
+
+          endloop.
+
+
+  ENDMETHOD.
+
+  METHOD precheck_create.
+
+  precheck_reuse(
+    EXPORTING
+*      entity_u =
+      entity_c = entities
+    IMPORTING
+      reported = reported-travel
+      failed   = failed-travel
+  ).
+
+  ENDMETHOD.
+
+  METHOD precheck_update.
+
+
+    precheck_reuse(
+    EXPORTING
+      entity_u = entities
+*      entity_c =
+    IMPORTING
+      reported = reported-travel
+      failed   = failed-travel
+  ).
+
+  ENDMETHOD.
+
+  METHOD acceptTravel.
+
+
+        MODIFY ENTITIES OF zam_r_travel
+        ENTITY travel
+        UPDATE FIELDS ( OverallStatus )
+        with value #(  for key in keys ( %tky = key-%tky
+                                         %is_draft = key-%is_draft
+                                         OverallStatus = 'A'
+        ) ).
+
+
+        READ ENTITIES OF zam_r_travel
+        entity travel
+        ALL fields
+        with CORRESPONDING #( keys )
+        result data(lt_result).
+
+        result = value #(  for travel in lt_result ( %tky = travel-%tky
+                                                     %param = travel ) ).
+
+
+
+  ENDMETHOD.
+
+  METHOD rejectTravel.
+
+ MODIFY ENTITIES OF zam_r_travel
+        ENTITY travel
+        UPDATE FIELDS ( OverallStatus )
+        with value #(  for key in keys ( %tky = key-%tky
+                                         %is_draft = key-%is_draft
+                                         OverallStatus = 'X'
+        ) ).
+
+
+        READ ENTITIES OF zam_r_travel
+        entity travel
+        ALL fields
+        with CORRESPONDING #( keys )
+        result data(lt_result).
+
+        result = value #(  for travel in lt_result ( %tky = travel-%tky
+                                                     %param = travel ) ).
 
   ENDMETHOD.
 
